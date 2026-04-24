@@ -1,7 +1,8 @@
-"""ThesisAgent 的本地 Streamlit UI。"""
+"""Streamlit MVP UI for the local-only ThesisAgent workflow."""
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import streamlit as st
@@ -32,6 +33,13 @@ SAMPLES_DIR = Path("data/samples")
 CHUNKS_PATH = Path("data/processed/chunks.jsonl")
 METADATA_PATH = Path("data/metadata/documents.jsonl")
 INDEX_PATH = Path("data/index/tfidf_index.pkl")
+
+
+def _safe_pdf_filename(item: dict) -> str:
+    raw_name = item.get("title") or item.get("original_filename") or item.get("doc_id") or "thesis"
+    stem = Path(str(raw_name)).stem
+    safe_stem = re.sub(r'[\\/:*?"<>|]+', "_", stem).strip(" ._") or str(item.get("doc_id") or "thesis")
+    return f"{safe_stem}.pdf"
 
 
 def _ui_text(language: str) -> dict[str, str]:
@@ -82,7 +90,6 @@ def _render_pdf_actions(
 
     doc_id = item["doc_id"]
     chunk_id = item.get("chunk_id", "")
-    download_state_key = f"{key_prefix}_download_bytes_{doc_id}_{chunk_id}"
     preview_state_key = f"{key_prefix}_preview_bytes_{doc_id}_{chunk_id}"
     columns = st.columns(3)
     with columns[0]:
@@ -94,24 +101,18 @@ def _render_pdf_actions(
             except Exception as exc:  # pragma: no cover - local OS action
                 st.error(f"{labels['open_error']} {exc}")
     with columns[1]:
-        if st.button(labels["download_pdf"], key=f"{key_prefix}_prepare_download_{doc_id}_{chunk_id}"):
-            try:
-                st.session_state[download_state_key] = get_pdf_download_bytes(
-                    catalog_path=catalog_path,
-                    doc_id=doc_id,
-                    pdf_root=pdf_root,
-                )
-            except Exception as exc:
-                st.caption(f"{labels['download_unavailable']} {exc}")
-        if st.session_state.get(download_state_key):
+        try:
+            pdf_bytes = get_pdf_download_bytes(catalog_path=catalog_path, doc_id=doc_id, pdf_root=pdf_root)
             st.download_button(
                 labels["download_pdf"],
-                data=st.session_state[download_state_key],
-                file_name=f"{doc_id}.pdf",
+                data=pdf_bytes,
+                file_name=_safe_pdf_filename(item),
                 mime="application/pdf",
-                key=f"{key_prefix}_download_{doc_id}_{chunk_id}",
+                key=f"download_pdf_{key_prefix}_{doc_id}_{chunk_id}",
                 on_click="ignore",
             )
+        except Exception as exc:
+            st.caption(f"{labels['download_unavailable']} {exc}")
     with columns[2]:
         if st.button(labels["preview_pdf"], key=f"{key_prefix}_prepare_preview_{doc_id}_{chunk_id}"):
             try:
@@ -194,6 +195,13 @@ def _render_search_tab(
         st.markdown(f"**{item['rank']}. {item['title']}**")
         st.write(f"{labels['score']}: `{item['score']:.4f}`")
         st.write(f"{labels['citation']}: `{item['citation']}`")
+        if item.get("matched_chunk_count"):
+            st.write(f"{labels['matched_chunk_count']}: `{item['matched_chunk_count']}`")
+            if item.get("matched_chunks"):
+                with st.expander(labels["matched_chunks"]):
+                    for chunk in item["matched_chunks"]:
+                        st.write(f"{chunk.get('citation', '')} | {labels['score']}: `{float(chunk.get('score', 0.0)):.4f}`")
+                        st.write(chunk.get("snippet", ""))
         if kb_mode == "internal":
             _render_internal_metadata(item, labels)
             _render_pdf_actions(item, catalog_path=catalog_path, pdf_root=pdf_root, key_prefix="search", labels=labels)
@@ -250,6 +258,8 @@ def _render_topic_tab(
             st.markdown(f"**{item['title']}**")
             _render_internal_metadata(item, labels)
             st.write(f"{labels['citation']}: `{item['citation']}`")
+            if item.get("matched_chunk_count"):
+                st.write(f"{labels['matched_chunk_count']}: `{item['matched_chunk_count']}`")
             _render_pdf_actions(item, catalog_path=catalog_path, pdf_root=pdf_root, key_prefix="topic", labels=labels)
     if result.get("note"):
         st.caption(result["note"])
@@ -302,7 +312,7 @@ def _render_structure_tab(ui: dict[str, str], samples_dir: Path, language: str) 
 
 
 def main() -> None:
-    """Render the local-only Streamlit application."""
+    """Render the Stage 5 local-only Streamlit MVP."""
     config = get_app_config()
     kb_mode = config.kb_mode
     initial_ui_language = config.ui_language if config.ui_language in {"ja", "zh", "en"} else "ja"

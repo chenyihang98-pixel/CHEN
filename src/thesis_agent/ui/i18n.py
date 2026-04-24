@@ -1,4 +1,4 @@
-"""Streamlit 标签的轻量 UI i18n 辅助模块。"""
+"""Small UI i18n helper for Streamlit labels."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ LABELS = {
         "structure_input": "合成サンプルを選択",
         "structure_button": "構成チェックを実行",
         "report_download": "Markdownレポートをダウンロード",
-        "stage_caption": "ローカル Streamlit UI",
+        "stage_caption": "Stage 5.3: ローカル Streamlit MVP UI",
         "capabilities": "ローカル検索、トピック分析、構成チェック、MockLLMレポート生成を利用できます。",
         "plagiarism_note": "これは盗用判定ではありません。テーマの近さや重なりを見るローカル補助機能です。",
         "demo_asset_readiness": "デモ資産の準備状態",
@@ -77,6 +77,8 @@ LABELS = {
         "debug_timing": "デバッグ時間情報",
         "search_seconds": "検索時間",
         "topic_seconds": "分析時間",
+        "matched_chunk_count": "一致した段落数",
+        "matched_chunks": "一致した段落",
     },
     "zh": {
         "app_title": "ThesisAgent",
@@ -96,7 +98,7 @@ LABELS = {
         "structure_input": "选择合成样例",
         "structure_button": "执行结构检查",
         "report_download": "下载 Markdown 报告",
-        "stage_caption": "本地 Streamlit UI",
+        "stage_caption": "Stage 5.3：本地 Streamlit MVP UI",
         "capabilities": "当前支持本地搜索、选题分析、结构检查和 MockLLM 报告生成。",
         "plagiarism_note": "这不是抄袭判定，只是本地主题相似度与重合风险提示。",
         "demo_asset_readiness": "演示资源准备状态",
@@ -149,6 +151,8 @@ LABELS = {
         "debug_timing": "调试耗时信息",
         "search_seconds": "搜索耗时",
         "topic_seconds": "分析耗时",
+        "matched_chunk_count": "匹配段落数",
+        "matched_chunks": "匹配段落",
     },
     "en": {
         "app_title": "ThesisAgent",
@@ -168,7 +172,7 @@ LABELS = {
         "structure_input": "Select synthetic sample",
         "structure_button": "Run structure check",
         "report_download": "Download Markdown report",
-        "stage_caption": "Local Streamlit UI",
+        "stage_caption": "Stage 5.3: local Streamlit MVP UI",
         "capabilities": "Local search, topic analysis, structure check, and MockLLM reporting are available.",
         "plagiarism_note": "This is not plagiarism detection. It is only a local topic overlap signal.",
         "demo_asset_readiness": "Demo Asset Readiness",
@@ -221,6 +225,8 @@ LABELS = {
         "debug_timing": "Debug timing",
         "search_seconds": "Search time",
         "topic_seconds": "Topic time",
+        "matched_chunk_count": "Matched chunks",
+        "matched_chunks": "Matched chunks",
     },
 }
 

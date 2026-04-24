@@ -1,4 +1,4 @@
-"""Streamlit UI 使用的本地服务函数。"""
+"""Service helpers for the local Streamlit MVP."""
 
 from __future__ import annotations
 
@@ -46,7 +46,7 @@ def _display_path(path: Path) -> str:
 
 
 def _display_internal_path(path: Path) -> str:
-    """避免在 UI 状态中暴露内部 PDF 绝对路径。"""
+    """Avoid showing absolute internal PDF paths in user-facing UI state."""
     return path.name
 
 
@@ -56,21 +56,21 @@ def _file_mtime(path: Path) -> float:
 
 @st.cache_resource(show_spinner=False)
 def load_cached_index(index_path: str, index_mtime: float) -> TfidfRetriever:
-    """加载 TF-IDF retriever，并在 index 文件变化时刷新缓存。"""
+    """Load a TF-IDF retriever, invalidating the cache when the index file changes."""
     del index_mtime
     return TfidfRetriever.load(Path(index_path))
 
 
 @st.cache_data(show_spinner=False)
 def load_cached_catalog(catalog_path: str, catalog_mtime: float) -> list[dict]:
-    """加载 catalog 记录，并在 CSV 变化时刷新缓存。"""
+    """Load catalog rows, invalidating the cache when the CSV changes."""
     del catalog_mtime
     return load_catalog(Path(catalog_path))
 
 
 @st.cache_data(show_spinner=False)
 def load_cached_documents(metadata_path: str, metadata_mtime: float) -> list[dict]:
-    """加载 document metadata JSONL，并在文件变化时刷新缓存。"""
+    """Load document metadata JSONL, invalidating the cache when the file changes."""
     del metadata_mtime
     path = Path(metadata_path)
     if not path.exists():
@@ -86,7 +86,7 @@ def load_cached_documents(metadata_path: str, metadata_mtime: float) -> list[dic
 
 @st.cache_data(show_spinner=False)
 def load_cached_sample_names(samples_dir: str, samples_mtime: float) -> list[str]:
-    """加载合成样例文件名，并在目录变化时刷新缓存。"""
+    """Load synthetic sample names, invalidating when the samples directory changes."""
     del samples_mtime
     path = Path(samples_dir)
     if not path.exists():
@@ -105,7 +105,7 @@ def get_demo_asset_status(
     metadata_path: Path,
     index_path: Path,
 ) -> dict:
-    """返回 demo artifacts 状态，不触发重建或 raw document 扫描。"""
+    """Return cheap demo asset status without rebuilding or scanning raw documents."""
     safe_chunks_path = _validate_workspace_path(chunks_path)
     safe_metadata_path = _validate_workspace_path(metadata_path)
     safe_index_path = _validate_workspace_path(index_path)
@@ -126,7 +126,7 @@ def get_internal_asset_status(
     chunks_path: Path,
     index_path: Path,
 ) -> dict:
-    """返回 internal artifacts 状态，不触发 sync、ingest、index 或 PDF 扫描。"""
+    """Return cheap internal asset status without syncing, ingesting, indexing, or scanning PDFs."""
     return {
         "mode": "internal",
         "catalog_exists": catalog_path.exists(),
@@ -149,7 +149,7 @@ def rebuild_demo_assets(
     index_path: Path,
     language: str = "ja",
 ) -> dict:
-    """从本地合成样例重建 demo artifacts。"""
+    """Rebuild synthetic demo assets from local sample files."""
     safe_samples_dir = _validate_workspace_path(samples_dir)
     safe_chunks_path = _validate_workspace_path(chunks_path)
     safe_metadata_path = _validate_workspace_path(metadata_path)
@@ -182,7 +182,7 @@ def ensure_demo_assets(
     index_path: Path,
     language: str = "ja",
 ) -> dict:
-    """仅在 demo artifacts 缺失时重建，保留旧调用兼容性。"""
+    """Backward-compatible demo helper that rebuilds only when assets are missing."""
     safe_samples_dir = _validate_workspace_path(samples_dir)
     status = get_demo_asset_status(chunks_path=chunks_path, metadata_path=metadata_path, index_path=index_path)
     if not status["chunks_exists"] or not status["index_exists"]:
@@ -203,7 +203,7 @@ def rebuild_internal_assets(
     index_path: Path,
     language: str = "ja",
 ) -> dict:
-    """从配置的 PDF root 显式重建 internal catalog、chunks 和 index。"""
+    """Explicitly rebuild internal catalog, chunks, and index from a configured PDF root."""
     if not pdf_root:
         raise ValueError("Internal mode requires LAB_PDF_ROOT")
 
@@ -227,7 +227,7 @@ def ensure_internal_assets(
     index_path: Path,
     language: str = "ja",
 ) -> dict:
-    """仅在 internal artifacts 缺失时重建，保留旧调用兼容性。"""
+    """Backward-compatible internal helper; explicit rebuild only when required by old callers."""
     status = get_internal_asset_status(catalog_path=catalog_path, chunks_path=chunks_path, index_path=index_path)
     if not status["catalog_exists"] or not status["chunks_exists"] or not status["index_exists"]:
         return rebuild_internal_assets(
@@ -353,6 +353,44 @@ def _format_search_result(result: SearchResult, catalog_record: dict | None = No
     }
 
 
+def dedupe_results_by_doc_id(results: list[dict], top_k: int) -> list[dict]:
+    """Collapse chunk-level hits into document-level search results."""
+    best_by_doc_id: dict[str, dict] = {}
+    matched_chunks_by_doc_id: dict[str, list[dict]] = {}
+
+    for result in results:
+        doc_id = result.get("doc_id", "")
+        if not doc_id:
+            continue
+
+        chunk_summary = {
+            "rank": result.get("rank"),
+            "score": result.get("score", 0.0),
+            "citation": result.get("citation", ""),
+            "chunk_id": result.get("chunk_id", ""),
+            "snippet": result.get("snippet", ""),
+        }
+        matched_chunks_by_doc_id.setdefault(doc_id, []).append(chunk_summary)
+
+        current_best = best_by_doc_id.get(doc_id)
+        if current_best is None or float(result.get("score", 0.0)) > float(current_best.get("score", 0.0)):
+            best_by_doc_id[doc_id] = dict(result)
+
+    deduped = sorted(best_by_doc_id.values(), key=lambda item: float(item.get("score", 0.0)), reverse=True)
+    deduped = deduped[: max(top_k, 0)]
+    for index, result in enumerate(deduped, start=1):
+        doc_id = result["doc_id"]
+        matched_chunks = sorted(
+            matched_chunks_by_doc_id.get(doc_id, []),
+            key=lambda item: float(item.get("score", 0.0)),
+            reverse=True,
+        )
+        result["rank"] = index
+        result["matched_chunk_count"] = len(matched_chunks)
+        result["matched_chunks"] = matched_chunks
+    return deduped
+
+
 def _search_cached_index(
     index_path: Path,
     query: str,
@@ -364,7 +402,8 @@ def _search_cached_index(
     retriever = load_cached_index(str(index_path), _file_mtime(index_path))
     catalog = _catalog_lookup(catalog_path)
     documents = _documents_lookup(metadata_path)
-    raw_results = retriever.search(query=query, top_k=top_k)
+    candidate_k = max(top_k * 5, top_k)
+    raw_results = retriever.search(query=query, top_k=candidate_k)
     results = [
         _format_search_result(
             result,
@@ -373,7 +412,7 @@ def _search_cached_index(
         )
         for result in raw_results
     ]
-    return results, time.perf_counter() - start
+    return dedupe_results_by_doc_id(results, top_k=top_k), time.perf_counter() - start
 
 
 def run_search(
