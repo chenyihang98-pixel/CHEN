@@ -1,0 +1,242 @@
+"""Streamlit 标签的轻量 UI i18n 辅助模块。"""
+
+from __future__ import annotations
+
+
+SUPPORTED_UI_LANGUAGES = {"ja", "zh", "en"}
+
+LABELS = {
+    "ja": {
+        "app_title": "ThesisAgent",
+        "sidebar_title": "ローカルMVP",
+        "local_notice": "このUIはローカル専用です。外部LLM、アップロード、実データの自動送信は行いません。",
+        "rebuild_button": "デモ資産を再構築",
+        "status_title": "現在の状態",
+        "home": "ホーム",
+        "search": "類似論文検索",
+        "topic": "トピック分析",
+        "structure": "構成チェック",
+        "privacy": "実際の論文、個人情報、非公開の学術データを貼り付けたりアップロードしたりしないでください。",
+        "search_input": "検索クエリ",
+        "search_button": "検索を実行",
+        "topic_input": "分析したいテーマ",
+        "topic_button": "トピック分析を実行",
+        "structure_input": "合成サンプルを選択",
+        "structure_button": "構成チェックを実行",
+        "report_download": "Markdownレポートをダウンロード",
+        "stage_caption": "ローカル Streamlit UI",
+        "capabilities": "ローカル検索、トピック分析、構成チェック、MockLLMレポート生成を利用できます。",
+        "plagiarism_note": "これは盗用判定ではありません。テーマの近さや重なりを見るローカル補助機能です。",
+        "demo_asset_readiness": "デモ資産の準備状態",
+        "mode": "モード",
+        "chunks": "チャンク",
+        "index": "インデックス",
+        "chunk_count": "チャンク数",
+        "chunks_path": "チャンクのパス",
+        "index_path": "インデックスのパス",
+        "catalog": "カタログ",
+        "local_only_overview_demo": (
+            "ThesisAgentは、合成サンプル、TF-IDF検索、ローカルツール、"
+            "決定的なMockLLMレポートで動作するローカル専用の論文探索MVPです。"
+        ),
+        "local_only_overview_internal": (
+            "ThesisAgentは、外部フォルダ内の内部PDFコーパスをローカルで検索し、"
+            "カタログのメタデータとPDF操作を表示する内部向けMVPです。"
+        ),
+        "score": "スコア",
+        "citation": "引用",
+        "advisor": "指導教員",
+        "year": "年度",
+        "author": "著者",
+        "open_pdf": "PDFを開く",
+        "download_pdf": "PDFをダウンロード",
+        "preview_pdf": "PDFをプレビュー",
+        "risk_level": "リスクレベル",
+        "risk_score": "リスクスコア",
+        "result_count": "結果数",
+        "search_results": "検索結果",
+        "topic_analysis": "トピック分析",
+        "structure_check": "構成チェック",
+        "preview_deferred_message": "PDFプレビューを表示しています。",
+        "open_success": "PDFを開くリクエストを送信しました。",
+        "open_error": "PDFを開けませんでした。",
+        "download_unavailable": "ダウンロードできません。",
+        "no_results": "ローカル検索結果が見つかりませんでした。",
+        "citations": "引用",
+        "pdf_references": "PDF参照",
+        "present_sections": "存在する項目",
+        "missing_sections": "不足している項目",
+        "suggestions": "提案",
+        "language": "言語",
+        "top_k": "上位K件",
+        "none": "なし",
+        "no_synthetic_samples": "利用可能な合成サンプルがありません。",
+        "no_synthetic_sample_selected": "合成サンプルが選択されていません。",
+        "demo_assets_ready": "デモ資産の準備が完了しました。",
+        "internal_mode_requires_paths": "内部モードには LAB_PDF_ROOT と LAB_CATALOG_PATH が必要です。",
+        "debug_timing": "デバッグ時間情報",
+        "search_seconds": "検索時間",
+        "topic_seconds": "分析時間",
+    },
+    "zh": {
+        "app_title": "ThesisAgent",
+        "sidebar_title": "本地 MVP",
+        "local_notice": "此 UI 仅在本地运行，不会调用外部 LLM，不提供上传，也不会自动发送真实数据。",
+        "rebuild_button": "重建演示资源",
+        "status_title": "当前状态",
+        "home": "主页",
+        "search": "相似论文搜索",
+        "topic": "选题分析",
+        "structure": "结构检查",
+        "privacy": "请不要粘贴或上传真实论文、身份信息或其他隐私学术数据。",
+        "search_input": "搜索查询",
+        "search_button": "执行搜索",
+        "topic_input": "待分析选题",
+        "topic_button": "执行选题分析",
+        "structure_input": "选择合成样例",
+        "structure_button": "执行结构检查",
+        "report_download": "下载 Markdown 报告",
+        "stage_caption": "本地 Streamlit UI",
+        "capabilities": "当前支持本地搜索、选题分析、结构检查和 MockLLM 报告生成。",
+        "plagiarism_note": "这不是抄袭判定，只是本地主题相似度与重合风险提示。",
+        "demo_asset_readiness": "演示资源准备状态",
+        "mode": "模式",
+        "chunks": "切片",
+        "index": "索引",
+        "chunk_count": "切片数量",
+        "chunks_path": "切片路径",
+        "index_path": "索引路径",
+        "catalog": "目录",
+        "local_only_overview_demo": (
+            "ThesisAgent 是一个仅在本地运行的论文探索 MVP，基于合成样例、"
+            "TF-IDF 检索、本地工具和确定性的 MockLLM 报告生成。"
+        ),
+        "local_only_overview_internal": (
+            "ThesisAgent 可以在本地检索外部文件夹中的内部 PDF 语料，"
+            "并展示目录元数据和 PDF 操作。"
+        ),
+        "score": "分数",
+        "citation": "引用",
+        "advisor": "导师",
+        "year": "年份",
+        "author": "作者",
+        "open_pdf": "打开 PDF",
+        "download_pdf": "下载 PDF",
+        "preview_pdf": "预览 PDF",
+        "risk_level": "风险等级",
+        "risk_score": "风险分数",
+        "result_count": "结果数量",
+        "search_results": "搜索结果",
+        "topic_analysis": "选题分析",
+        "structure_check": "结构检查",
+        "preview_deferred_message": "正在显示 PDF 预览。",
+        "open_success": "已发送本地打开 PDF 请求。",
+        "open_error": "无法打开 PDF。",
+        "download_unavailable": "无法下载。",
+        "no_results": "没有找到本地结果。",
+        "citations": "引用",
+        "pdf_references": "PDF 引用",
+        "present_sections": "已包含章节",
+        "missing_sections": "缺失章节",
+        "suggestions": "建议",
+        "language": "语言",
+        "top_k": "Top K",
+        "none": "无",
+        "no_synthetic_samples": "没有可用的合成样例。",
+        "no_synthetic_sample_selected": "未选择合成样例。",
+        "demo_assets_ready": "演示资源已准备完成。",
+        "internal_mode_requires_paths": "内部模式需要 LAB_PDF_ROOT 和 LAB_CATALOG_PATH。",
+        "debug_timing": "调试耗时信息",
+        "search_seconds": "搜索耗时",
+        "topic_seconds": "分析耗时",
+    },
+    "en": {
+        "app_title": "ThesisAgent",
+        "sidebar_title": "Local MVP",
+        "local_notice": "This UI runs locally only. External LLMs, uploads, and automatic real-data sending are disabled.",
+        "rebuild_button": "Rebuild demo assets",
+        "status_title": "Current status",
+        "home": "Home",
+        "search": "Similar Thesis Search",
+        "topic": "Topic Analysis",
+        "structure": "Structure Check",
+        "privacy": "Do not paste or upload real theses, personal identities, or private academic data.",
+        "search_input": "Search query",
+        "search_button": "Run search",
+        "topic_input": "Topic to analyze",
+        "topic_button": "Run topic analysis",
+        "structure_input": "Select synthetic sample",
+        "structure_button": "Run structure check",
+        "report_download": "Download Markdown report",
+        "stage_caption": "Local Streamlit UI",
+        "capabilities": "Local search, topic analysis, structure check, and MockLLM reporting are available.",
+        "plagiarism_note": "This is not plagiarism detection. It is only a local topic overlap signal.",
+        "demo_asset_readiness": "Demo Asset Readiness",
+        "mode": "Mode",
+        "chunks": "Chunks",
+        "index": "Index",
+        "chunk_count": "Chunk count",
+        "chunks_path": "Chunks path",
+        "index_path": "Index path",
+        "catalog": "Catalog",
+        "local_only_overview_demo": (
+            "ThesisAgent is a local-only thesis exploration MVP built on synthetic samples, "
+            "TF-IDF retrieval, local tools, and deterministic MockLLM reporting."
+        ),
+        "local_only_overview_internal": (
+            "ThesisAgent searches an internal PDF corpus from an external folder and displays "
+            "catalog metadata plus PDF actions locally."
+        ),
+        "score": "Score",
+        "citation": "Citation",
+        "advisor": "Advisor",
+        "year": "Year",
+        "author": "Author",
+        "open_pdf": "Open PDF",
+        "download_pdf": "Download PDF",
+        "preview_pdf": "Preview PDF",
+        "risk_level": "Risk level",
+        "risk_score": "Risk score",
+        "result_count": "Result count",
+        "search_results": "Search results",
+        "topic_analysis": "Topic analysis",
+        "structure_check": "Structure check",
+        "preview_deferred_message": "Showing PDF preview.",
+        "open_success": "PDF open request was sent.",
+        "open_error": "Could not open PDF.",
+        "download_unavailable": "Download unavailable.",
+        "no_results": "No local results were found.",
+        "citations": "Citations",
+        "pdf_references": "PDF references",
+        "present_sections": "Present sections",
+        "missing_sections": "Missing sections",
+        "suggestions": "Suggestions",
+        "language": "Language",
+        "top_k": "Top K",
+        "none": "none",
+        "no_synthetic_samples": "No synthetic samples are available.",
+        "no_synthetic_sample_selected": "No synthetic sample is selected.",
+        "demo_assets_ready": "Demo assets are ready.",
+        "internal_mode_requires_paths": "Internal mode requires LAB_PDF_ROOT and LAB_CATALOG_PATH.",
+        "debug_timing": "Debug timing",
+        "search_seconds": "Search time",
+        "topic_seconds": "Topic time",
+    },
+}
+
+
+def normalize_ui_language(language: str | None) -> str:
+    """Normalize a UI language, defaulting to Japanese for document workflows."""
+    normalized = (language or "ja").strip().lower()
+    return normalized if normalized in SUPPORTED_UI_LANGUAGES else "ja"
+
+
+def get_ui_labels(language: str | None) -> dict[str, str]:
+    """Return UI labels for a supported language."""
+    return LABELS[normalize_ui_language(language)]
+
+
+def ui_label(language: str | None, key: str) -> str:
+    """Return one translated label, falling back to English/key if missing."""
+    labels = get_ui_labels(language)
+    return labels.get(key, LABELS["en"].get(key, key))
