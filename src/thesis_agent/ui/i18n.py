@@ -1,4 +1,4 @@
-"""Small UI i18n helper for Streamlit labels."""
+"""网页界面的多语言文案配置与本地化辅助函数。"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Service helpers for the local Streamlit MVP."""
+"""网页层服务函数，负责检索、选题分析、结构检查、PDF 操作和结果整理。"""
 
 from __future__ import annotations
 

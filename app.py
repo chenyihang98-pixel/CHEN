@@ -1,4 +1,4 @@
-"""Streamlit MVP UI for the local-only ThesisAgent workflow."""
+"""ThesisAgent 的 Streamlit 本地网页入口。"""
 
 from __future__ import annotations
 
